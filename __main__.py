@@ -13,6 +13,7 @@ PAGE="""\
 </head>
 <body>
 <center><h1>Control the Robot Dog</h1></center>
+<center><h2 id="cat_label">Waiting for Data</h2></center>
 <center><img src="stream.mjpg" width="640" height="480"></center>
 <center><button id='dog-forward'>Forward</button>
 <button id='dog-backward'>Backward</button>
@@ -57,6 +58,26 @@ async function move(device, direction) {
     console.error(`Error: ${err}`);
   }
 }
+
+var catChecker = setInterval(function() {
+  let xhr = new XMLHttpRequest();
+  xhr.open('GET', '/cat', true);
+  xhr.onload = function () {
+    var ret_data = this.responseText;
+    
+    if (ret_data.length > 0) {
+      var catlab = document.getElementById('cat_label');
+      if (ret_data.includes("True")) {
+        catlab.innerHTML = 'Doggy sees a cat';
+      } else {
+        catlab.innerHTML = "Doggy doesn't see a cat";
+      }
+        
+    }
+  };
+  xhr.send();
+}, 1000);
+
 </script>
 </body>
 </html>
@@ -89,6 +110,13 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             content = PAGE.encode('utf-8')
             self.send_response(200)
             self.send_header('Content-Type', 'text/html')
+            self.send_header('Content-Length', len(content))
+            self.end_headers()
+            self.wfile.write(content)
+        elif self.path == '/cat':
+            content = 'True'.encode('utf-8')
+            self.send_response(200)
+            self.send_header('Content-Type', 'text/plain')
             self.send_header('Content-Length', len(content))
             self.end_headers()
             self.wfile.write(content)
