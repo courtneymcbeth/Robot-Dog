@@ -5,17 +5,44 @@ from adafruit_servokit import ServoKit
 # 8 for FeatherWing, 16 for Shield/HAT/Bonnet.
 kit = ServoKit(channels=16)
 
-count = 0
-while count < 10:
-    count += 1
+def one_leg():
+    diff = 45
+    forward = 90 - diff
+    backward = 90 + diff
     
-    kit.servo[1].angle = 30
-    kit.servo[2].angle = 120
-    time.sleep(1)
+    big_delay = .5
+    small_delay = 0
+    
+    count = 0
+    while count < 5:
+        count += 1
+        
+        time.sleep(small_delay)
+        kit.servo[3].angle = backward
+        time.sleep(big_delay)
+        kit.servo[3].angle = 90
+        
+        time.sleep(small_delay)
+        kit.servo[1].angle = backward
+        time.sleep(big_delay)
+        kit.servo[1].angle = 90
+        
+        time.sleep(small_delay)
+        kit.servo[7].angle = forward
+        time.sleep(big_delay)
+        kit.servo[7].angle = 90
+        
+        time.sleep(small_delay)
+        kit.servo[5].angle = forward
+        time.sleep(big_delay)
+        kit.servo[5].angle = 90
+    
+    reset_servos()
 
-    kit.servo[1].angle = 120
-    kit.servo[2].angle = 30
-    time.sleep(1)
-    
-kit.servo[1].angle = 90
-kit.servo[2].angle = 90
+def reset_servos():
+    for i in range(16):
+        kit.servo[i].angle = 90
+    time.sleep(2)
+    print("done")
+
+one_leg()
