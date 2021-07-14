@@ -5,6 +5,8 @@ import socketserver
 from threading import Condition
 from http import server
 import json
+import cat_detector as cd
+from PIL import Image
 
 PAGE="""\
 <html>
@@ -88,6 +90,9 @@ class StreamingOutput(object):
         self.frame = None
         self.buffer = io.BytesIO()
         self.condition = Condition()
+    
+    def read(self):
+        return self.frame
 
     def write(self, buf):
         if buf.startswith(b'\xff\xd8'):
@@ -114,7 +119,13 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
             self.end_headers()
             self.wfile.write(content)
         elif self.path == '/cat':
-            content = 'True'.encode('utf-8')
+            with output.condition:
+                output.condition.wait()
+                frame = output.frame
+            img = Image.open(io.BytesIO(frame))
+            hasCat = catDetector.isCatImage(img)
+            content = str(hasCat).encode('utf-8')
+                
             self.send_response(200)
             self.send_header('Content-Type', 'text/plain')
             self.send_header('Content-Length', len(content))
@@ -169,7 +180,8 @@ class StreamingServer(socketserver.ThreadingMixIn, server.HTTPServer):
     allow_reuse_address = True
     daemon_threads = True
 
-with picamera.PiCamera(resolution='640x480', framerate=24) as camera:
+with picamera.PiCamera(resolution='640x480', framerate=16) as camera:
+    catDetector = cd.CatDetector('./CatNet13-07-2021-1050.pickle')
     output = StreamingOutput()
     #Uncomment the next line to change your Pi's Camera rotation (in degrees)
     #camera.rotation = 90
