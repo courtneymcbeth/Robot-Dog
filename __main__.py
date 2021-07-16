@@ -7,6 +7,7 @@ from http import server
 import json
 import cat_detector as cd
 from PIL import Image
+import motor_control
 
 PAGE="""\
 <html>
@@ -168,6 +169,16 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                 data = json.loads(data)
                 print('device: {}'.format(data['device']))
                 print('direction: {}'.format(data['direction']))
+                if data['device'] == 'dog' and data['direction'] == 'forward':
+                    dog.move_forward()
+                elif data['device'] == 'camera' and data['direction'] == 'up':
+                    dog.move_camera(pan=-10)
+                elif data['device'] == 'camera' and data['direction'] == 'down':
+                    dog.move_camera(pan=10)
+                elif data['device'] == 'camera' and data['direction'] == 'left':
+                    dog.move_camera(tilt=10)
+                elif data['device'] == 'camera' and data['direction'] == 'right':
+                    dog.move_camera(tilt=-10)
             except Exception as e:
                 logging.warning(
                     'Got improper request %s: %s',
@@ -181,10 +192,11 @@ class StreamingServer(socketserver.ThreadingMixIn, server.HTTPServer):
     daemon_threads = True
 
 with picamera.PiCamera(resolution='640x480', framerate=16) as camera:
+    dog = motor_control.Dog()
     catDetector = cd.CatDetector('./CatNet13-07-2021-1050.pickle')
     output = StreamingOutput()
     #Uncomment the next line to change your Pi's Camera rotation (in degrees)
-    #camera.rotation = 90
+    camera.rotation = 180
     camera.start_recording(output, format='mjpeg')
     try:
         address = ('', 8000)
