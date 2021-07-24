@@ -7,45 +7,50 @@ class Dog:
         self.reset_servos(cam=True)
         
     def reset_servos(self, cam=False):
-        max_range = 16 if cam else 14
-        for i in range(max_range):
+        if cam:
+            self.kit.servo[14].angle = 90
+            self.kit.servo[15].angle = 180
+        for i in range(0, 8, 2):
             self.kit.servo[i].angle = 90
+            self.kit.servo[i+1].angle = 85
             
-    def move_forward(self, steps = 10):
-        self.reset_servos()
-    
-        diff = 45
-        forward = 90 - diff
-        backward = 90 + diff
-    
-        big_delay = .5
-        small_delay = 0
-    
-        count = 0
-        while count < steps:
-            count += 1
+    def move_forward(self, steps = 20):
+        self.kit.servo[1].angle = 70
+        self.kit.servo[3].angle = 70
         
-            time.sleep(small_delay)
-            self.kit.servo[3].angle = backward
-            time.sleep(big_delay)
-            self.kit.servo[3].angle = 90
+        self.kit.servo[5].angle = 100
+        self.kit.servo[7].angle = 100
         
-            time.sleep(small_delay)
-            self.kit.servo[1].angle = backward
-            time.sleep(big_delay)
-            self.kit.servo[1].angle = 90
-        
-            time.sleep(small_delay)
-            self.kit.servo[7].angle = forward
-            time.sleep(big_delay)
-            self.kit.servo[7].angle = 90
-        
-            time.sleep(small_delay)
-            self.kit.servo[5].angle = forward
-            time.sleep(big_delay)
-            self.kit.servo[5].angle = 90
+        if steps is not None:
+            time.sleep(steps)
+            self.stop_moving()
     
-        self.reset_servos()
+    def move_backward(self, steps = 20):
+        self.kit.servo[5].angle = 70
+        self.kit.servo[7].angle = 70
+        
+        self.kit.servo[1].angle = 100
+        self.kit.servo[3].angle = 100
+        
+        if steps is not None:
+            time.sleep(steps)
+            self.stop_moving()
+    
+    def stop_moving(self):
+        for i in range(1, 8, 2):
+            self.kit.servo[i].angle = 85
+    
+    def turn_left(self):
+        if self.kit.servo[0].angle >= 10:
+            self.kit.servo[0].angle -= 10
+        if self.kit.servo[4].angle >= 10:
+            self.kit.servo[4].angle -= 10
+    
+    def turn_right(self):
+        if self.kit.servo[0].angle <= 170:
+            self.kit.servo[0].angle += 10
+        if self.kit.servo[4].angle <= 170:
+            self.kit.servo[4].angle += 10
     
     def move_camera(self, pan=0, tilt=0):
         if self.kit.servo[14].angle + tilt >= 0 and self.kit.servo[14].angle + tilt <=180:

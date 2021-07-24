@@ -1,4 +1,5 @@
 import io
+import os
 import picamera
 import logging
 import socketserver
@@ -20,6 +21,7 @@ PAGE="""\
 <center><img src="stream.mjpg" width="640" height="480"></center>
 <center><button id='dog-forward'>Forward</button>
 <button id='dog-backward'>Backward</button>
+<button id='dog-stop'>Stop</button>
 <button id='dog-left'>Left</button>
 <button id='dog-right'>Right</button>
 <button id='cam-up'>Camera Up</button>
@@ -32,6 +34,9 @@ dfbutton.addEventListener('click', _ => move("dog", "forward"));
 
 const dbbutton = document.getElementById('dog-backward');
 dbbutton.addEventListener('click', _ => move("dog", "backward"));
+
+const dsbutton = document.getElementById('dog-stop');
+dsbutton.addEventListener('click', _ => move("dog", "stop"));
 
 const dlbutton = document.getElementById('dog-left');
 dlbutton.addEventListener('click', _ => move("dog", "left"));
@@ -125,6 +130,8 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                 frame = output.frame
             img = Image.open(io.BytesIO(frame))
             hasCat = catDetector.isCatImage(img)
+            if hasCat:
+                os.system('omxplayer --no-keys Dog.mp3 &')
             content = str(hasCat).encode('utf-8')
                 
             self.send_response(200)
@@ -171,6 +178,14 @@ class StreamingHandler(server.BaseHTTPRequestHandler):
                 print('direction: {}'.format(data['direction']))
                 if data['device'] == 'dog' and data['direction'] == 'forward':
                     dog.move_forward()
+                elif data['device'] == 'dog' and data['direction'] == 'backward':
+                    dog.move_backward()
+                elif data['device'] == 'dog' and data['direction'] == 'stop':
+                    dog.stop_moving()
+                elif data['device'] == 'dog' and data['direction'] == 'left':
+                    dog.turn_left()
+                elif data['device'] == 'dog' and data['direction'] == 'right':
+                    dog.turn_right()
                 elif data['device'] == 'camera' and data['direction'] == 'up':
                     dog.move_camera(pan=-10)
                 elif data['device'] == 'camera' and data['direction'] == 'down':
